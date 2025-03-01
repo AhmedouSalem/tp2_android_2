@@ -19,6 +19,8 @@ import java.util.List;
 
 import fr.umontpellier.android_tp2_2.adepters.CountryAdapter;
 import fr.umontpellier.android_tp2_2.api.CountryService;
+import fr.umontpellier.android_tp2_2.fragments.CountryDetailFragment;
+import fr.umontpellier.android_tp2_2.fragments.CountryListFragment;
 import fr.umontpellier.android_tp2_2.models.Country;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -26,70 +28,49 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class MainActivity extends AppCompatActivity {
-    private RecyclerView recyclerView;
-    private CountryAdapter adapter;
-    private List<Country> countryList = new ArrayList<>();
-    private CountryService countryService;
-    private CircularProgressIndicator loadingIndicator;
+import androidx.lifecycle.ViewModelProvider;
+
+public class MainActivity extends AppCompatActivity implements CountryListFragment.OnCountrySelectedListener {
+    private boolean isTablet;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        recyclerView = findViewById(R.id.recycler_view);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        // Vérifier si l'écran est une tablette
+        isTablet = getResources().getBoolean(R.bool.isTablet);
 
-        loadingIndicator = findViewById(R.id.loading_indicator);
-
-        // Initialiser Retrofit
-        countryService = new Retrofit.Builder()
-                .baseUrl("https://restcountries.com/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-                .create(CountryService.class);
-
-        loadingIndicator.setVisibility(View.VISIBLE);
-
-        fetchCountries();
-
-        // Configurer l'adaptateur avec un écouteur pour gérer les clics sur les éléments
-        adapter = new CountryAdapter(countryList, this, new CountryAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(Country country) {
-                // Passer au détail du pays avec un Intent
-                Intent intent = new Intent(MainActivity.this, CountryDetailActivity.class);
-                intent.putExtra("country_name", country.getName().getCommon());
-                startActivity(intent);
-            }
-        });
-
-        recyclerView.setAdapter(adapter);
+        if (isTablet) {
+            // Charger les deux fragments pour les tablettes
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new CountryListFragment())
+                    .replace(R.id.fragment_container_detail, new CountryDetailFragment())
+                    .commit();
+        } else {
+            // Utiliser un seul fragment pour les petits écrans
+            CountryListFragment countryListFragment = new CountryListFragment();
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, countryListFragment)
+                    .commit();
+        }
     }
 
-    private void fetchCountries() {
-        countryService.getCountries().enqueue(new Callback<List<Country>>() {
-            @Override
-            public void onResponse(Call<List<Country>> call, Response<List<Country>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    countryList.clear();
-                    countryList.addAll(response.body());
-                    countryList.sort(null);
-                    adapter.notifyDataSetChanged();
+    @Override
+    public void onCountrySelected(Country country) {
+        if (isTablet) {
+            // Passer le nom du pays uniquement, et créer le fragment après la sélection
+            CountryDetailFragment detailFragment = CountryDetailFragment.newInstance(country.getName().getCommon());
 
-                    // Masquer l'indicateur de progression une fois les données chargées
-                    loadingIndicator.setVisibility(View.GONE);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<List<Country>> call, Throwable t) {
-                Log.e("MainActivity", "Failed to fetch countries", t);
-                // Masquer l'indicateur de progression si l'appel échoue
-                loadingIndicator.setVisibility(View.GONE);
-            }
-        });
+            // Remplacer le fragment de détails dans le conteneur
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container_detail, detailFragment)
+                    .commit();
+        } else {
+            // Pour les petits écrans, utiliser l'activité de détails comme avant
+            Intent intent = new Intent(MainActivity.this, CountryDetailActivity.class);
+            intent.putExtra("country_name", country.getName().getCommon());
+            startActivity(intent);
+        }
     }
 }
-

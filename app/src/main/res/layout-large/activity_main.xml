@@ -30,11 +30,26 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <!-- Conteneur pour le Fragment de la liste des pays -->
-        <FrameLayout
-            android:id="@+id/fragment_container"
+        <!-- LinearLayout horizontal pour afficher les fragments côte à côte -->
+        <LinearLayout
+            android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent">
+
+            <!-- Conteneur pour le Fragment de la liste des pays -->
+            <FrameLayout
+                android:id="@+id/fragment_container"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"/>
+
+            <!-- Conteneur pour le Fragment de détails du pays (pour les tablettes) -->
+            <FrameLayout
+                android:id="@+id/fragment_container_detail"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"/>
+        </LinearLayout>
 
         <!-- Indicateur de chargement (CircularProgressIndicator) -->
         <com.google.android.material.progressindicator.CircularProgressIndicator
@@ -47,4 +62,3 @@
     </RelativeLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
-

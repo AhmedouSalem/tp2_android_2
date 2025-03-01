@@ -13,4 +13,4 @@
 .externalNativeBuild
 .cxx
 local.properties
-app/src/main/java/fr/umontpellier/android_tp2_2/fragments/
+# app/src/main/java/fr/umontpellier/android_tp2_2/fragments/
